@@ -1,0 +1,21 @@
+{
+  "name": "rahulAPI",
+  "version": "1.0.0",
+  "description": "rahulAPI at your service. Providing helpful tips and know-how",
+  "main": "index.js",
+  "scripts": {
+    "start": "node -r dotenv/config server",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "Tai Le <taile602@gmail.com>",
+  "license": "ISC",
+  "dependencies": {
+    "@slack/client": "^4.8.0",
+    "@slack/interactive-messages": "^1.0.2",
+    "axios": "^0.18.0",
+    "body-parser": "^1.18.3",
+    "dotenv": "^6.2.0",
+    "express": "^4.16.4"
+  }
+}
