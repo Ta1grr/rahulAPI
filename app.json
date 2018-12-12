@@ -1,0 +1,23 @@
+{
+    "name": "rahulAPI",
+    "description": "rahulAPI here, providing useful knowledge and inputs",
+    "repository": "https://github.com/Ta1grr/rahulAPI",
+    "logo": "https://scontent.fewr1-3.fna.fbcdn.net/v/t1.0-1/p480x480/21557648_2384383775120938_2912385991140812435_n.jpg?_nc_cat=101&_nc_ht=scontent.fewr1-3.fna&oh=d11d7885d7a15e767d68f84bedc301dc&oe=5CB0889B",
+    "success_url": "/",
+    "env": {
+      "HEROKU_APP_NAME": {
+        "required": true
+      },
+      "RAHULAPI_COMMAND_TOKEN": {
+        "description": "Slash command token, for the rahulAPI command endpoint",
+        "required": true
+      },
+      "SLACK_TOKEN": {
+        "description": "Slack bot RTM API token",
+        "required": false
+      },
+      "NODE_ENV": "staging"
+    },
+    "image": "heroku/nodejs"
+  }
+  
