@@ -21,6 +21,9 @@ const web = new WebClient(slackAccessToken);
 // Initialize an Express application
 const app = express();
 
+//Testing to make sure the server is alive.
+app.get('/', (req, res) => { res.send('\n rahulAPI is ALIIIVE \n') })
+
 // Attach the adapter to the Express application as a middleware
 app.use('/slack/actions', slackInteractions.expressMiddleware());
 
