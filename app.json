@@ -8,7 +8,7 @@
       "HEROKU_APP_NAME": {
         "required": true
       },
-      "RAHULAPI_COMMAND_TOKEN": {
+      "slackSigningSecret": {
         "description": "Slash command token, for the rahulAPI command endpoint",
         "required": true
       },

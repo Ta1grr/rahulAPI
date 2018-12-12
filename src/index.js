@@ -2,7 +2,9 @@ const http = require('http');
 const express = require('express');
 const { createMessageAdapter } = require('@slack/interactive-messages');
 const { WebClient } = require('@slack/client');
-const { users, neighborhoods } = require('./models');
+const bodyParser = require('body-parser')
+// const { users, neighborhoods } = require('./models');
+const config = require('./config')
 const axios = require('axios');
 
 // Read the verification token from the environment variables
@@ -21,6 +23,15 @@ const web = new WebClient(slackAccessToken);
 // Initialize an Express application
 const app = express();
 
+if (config('PROXY_URI')) {
+  app.use(proxy(config('PROXY_URI'), {
+    forwardPath: (req, res) => { return require('url').parse(req.url).path }
+  }))
+}
+
+app.use(bodyParser.json())
+app.use(bodyParser.urlencoded({ extended: true }))
+
 //Testing to make sure the server is alive.
 app.get('/', (req, res) => { res.send('\n rahulAPI is ALIIIVE \n') })
 
@@ -31,10 +42,21 @@ app.use('/slack/actions', slackInteractions.expressMiddleware());
 app.post('/slack/commands', slackSlashCommand);
 
 // Start the express application server
-const port = process.env.PORT || 0;
-http.createServer(app).listen(port, () => {
-  console.log(`server listening on port ${port}`);
-});
+// const port = process.env.PORT || 8000;
+// http.createServer(app).listen(port, () => {
+//   console.log(`server listening on port ${port}`);
+// });
+
+app.listen(config('PORT'), (err) => {
+  if (err) throw err
+
+  console.log(`\n rahulAPI on PORT ${config('PORT')} `)
+
+  if (config('SLACK_TOKEN')) {
+    console.log(`@rahulAPI is real-time\n`)
+    bot.listen({ token: config('SLACK_TOKEN') })
+  }
+})
 
 // Slack interactive message handlers
 slackInteractions.action('accept_tos', (payload, respond) => {
