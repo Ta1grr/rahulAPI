@@ -4,9 +4,11 @@ const { createMessageAdapter } = require('@slack/interactive-messages');
 const { WebClient } = require('@slack/client');
 const { createEventAdapter } = require('@slack/events-api');
 const bodyParser = require('body-parser')
+const SlackStrategy = require('@aoberoi/passport-slack').default.Strategy;
 // const { users, neighborhoods } = require('./models');
 const config = require('./config')
 const axios = require('axios');
+const passport = require('passport');
 
 // Read the verification token from the environment variables
 // const slackEvents = createEventAdapter(process.env.SLACK_SIGNING_SECRET);
