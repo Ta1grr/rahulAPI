@@ -2,17 +2,35 @@ const http = require('http');
 const express = require('express');
 const { createMessageAdapter } = require('@slack/interactive-messages');
 const { WebClient } = require('@slack/client');
+const { createEventAdapter } = require('@slack/events-api');
 const bodyParser = require('body-parser')
 // const { users, neighborhoods } = require('./models');
 const config = require('./config')
 const axios = require('axios');
 
 // Read the verification token from the environment variables
+// const slackEvents = createEventAdapter(process.env.SLACK_SIGNING_SECRET);
+const slackEvents = createEventAdapter(process.env.SLACK_SIGNING_SECRET, {
+  includeBody: true
+});
 const slackSigningSecret = process.env.SLACK_SIGNING_SECRET;
 const slackAccessToken = process.env.SLACK_ACCESS_TOKEN;
 if (!slackSigningSecret || !slackAccessToken) {
   throw new Error('A Slack signing secret and access token are required to run this app.');
 }
+
+// Initialize a data structures to store team authorization info (typically stored in a database)
+const botAuthorizations = {}
+
+// Initialize Add to Slack (OAuth) helpers
+passport.use(new SlackStrategy({
+  clientID: process.env.SLACK_CLIENT_ID,
+  clientSecret: process.env.SLACK_CLIENT_SECRET,
+  skipUserProfile: true,
+}, (accessToken, scopes, team, extra, profiles, done) => {
+  botAuthorizations[team.id] = extra.bot.accessToken;
+  done(null, {});
+}));
 
 // Create the adapter using the app's verification token
 const slackInteractions = createMessageAdapter(slackSigningSecret);
@@ -29,6 +47,24 @@ if (config('PROXY_URI')) {
   }))
 }
 
+// Plug the Add to Slack (OAuth) helpers into the express app
+app.use(passport.initialize());
+app.get('/', (req, res) => {
+  res.send('<a href="/auth/slack"><img alt="Add to Slack" height="40" width="139" src="https://platform.slack-edge.com/img/add_to_slack.png" srcset="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x" /></a>');
+});
+app.get('/auth/slack', passport.authenticate('slack', {
+  scope: ['bot']
+}));
+app.get('/auth/slack/callback',
+  passport.authenticate('slack', { session: false }),
+  (req, res) => {
+    res.send('<p>Greet and React was successfully installed on your team.</p>');
+  },
+  (err, req, res, next) => {
+    res.status(500).send(`<p>Greet and React failed to install</p> <pre>${err}</pre>`);
+  }
+);
+
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 
@@ -37,28 +73,69 @@ app.get('/', (req, res) => { res.send('\n rahulAPI is ALIIIVE \n') })
 
 // Attach the adapter to the Express application as a middleware
 app.use('/slack/actions', slackInteractions.expressMiddleware());
+app.use('/slack/events', slackEvents.expressMiddleware());
 
 // Attach the slash command handler
 app.post('/slack/commands', slackSlashCommand);
 
-// Start the express application server
-// const port = process.env.PORT || 8000;
-// http.createServer(app).listen(port, () => {
-//   console.log(`server listening on port ${port}`);
-// });
-
-app.listen(config('PORT'), (err) => {
-  if (err) throw err
-
-  console.log(`\n rahulAPI on PORT ${config('PORT')} `)
-
-  if (config('SLACK_TOKEN')) {
-    console.log(`@rahulAPI is real-time\n`)
-    bot.listen({ token: config('SLACK_TOKEN') })
+// *** Handle errors ***
+slackEvents.on('error', (error) => {
+  if (error.code === slackEventsApi.errorCodes.TOKEN_VERIFICATION_FAILURE) {
+    // This error type also has a `body` propery containing the request body which failed verification.
+    console.error(`An unverified request was sent to the Slack events Request URL. Request body: \
+${JSON.stringify(error.body)}`);
+  } else {
+    console.error(`An error occurred while handling a Slack event: ${error.message}`);
   }
-})
+});
 
-// Slack interactive message handlers
+// Start the express application server
+const port = process.env.PORT || 8000;
+http.createServer(app).listen(port, () => {
+  console.log(`server listening on port ${port}`);
+});
+
+// app.listen(config('PORT'), (err) => {
+//   if (err) throw err
+
+//   console.log(`\n rahulAPI on PORT ${config('PORT')} `)
+
+//   if (config('SLACK_ACCESS_TOKEN')) {
+//     console.log(`@rahulAPI is real-time\n`)
+//     bot.listen({ token: config('SLACK_ACCESS_TOKEN') })
+//   }
+// })
+/* >>>>>>>>>>>Slack Event Handlers<<<<<<<<<<<<<< */ 
+// *** Greeting any user that says "hi" ***
+slackEvents.on('message', (message, body) => {
+  // Only deal with messages that have no subtype (plain messages) and contain 'hi'
+  if (!message.subtype && message.text.indexOf('hi') >= 0) {
+    // Initialize a client
+    const slack = getClientByTeamId(body.team_id);
+    // Handle initialization failure
+    if (!slack) {
+      return console.error('No authorization found for this team. Did you install this app again after restarting?');
+    }
+    // Respond to the message back in the same channel
+    slack.chat.postMessage({ channel: message.channel, text: `Hello <@${message.user}>! :tada:` })
+      .catch(console.error);
+  }
+});
+
+// *** Responding to reactions with the same emoji ***
+slackEvents.on('reaction_added', (event, body) => {
+  // Initialize a client
+  const slack = getClientByTeamId(body.team_id);
+  // Handle initialization failure
+  if (!slack) {
+    return console.error('No authorization found for this team. Did you install this app again after restarting?');
+  }
+  // Respond to the reaction back with the same emoji
+  slack.chat.postMessage(event.item.channel, `:${event.reaction}:`)
+    .catch(console.error);
+});
+
+/* >>>>>>Slack interactive message handlers<<<<<< */
 slackInteractions.action('accept_tos', (payload, respond) => {
   console.log(`The user ${payload.user.name} in team ${payload.team.domain} pressed a button`);
 

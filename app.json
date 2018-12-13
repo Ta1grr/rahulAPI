@@ -12,7 +12,7 @@
         "description": "Slash command token, for the rahulAPI command endpoint",
         "required": true
       },
-      "SLACK_TOKEN": {
+      "SLACK_ACCESS_TOKEN": {
         "description": "Slack bot RTM API token",
         "required": false
       },

@@ -11,7 +11,7 @@ const config = {
   PROXY_URI: process.env.PROXY_URI,
   WEBHOOK_URL: process.env.WEBHOOK_URL,
   SLACK_SIGNING_SECRET: process.env.SLACK_SIGNING_SECRET,
-  SLACK_TOKEN: process.env.SLACK_TOKEN,
+  SLACK_ACCESS_TOKEN: process.env.SLACK_ACCESS_TOKEN,
   ICON_EMOJI: ':rahul:'
 }
 
