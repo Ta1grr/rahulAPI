@@ -10,7 +10,7 @@ const config = {
   PORT: process.env.PORT,
   PROXY_URI: process.env.PROXY_URI,
   WEBHOOK_URL: process.env.WEBHOOK_URL,
-  RAHULAPI_COMMAND_TOKEN: process.env.RAHULAPI_COMMAND_TOKEN,
+  SLACK_SIGNING_SECRET: process.env.SLACK_SIGNING_SECRET,
   SLACK_TOKEN: process.env.SLACK_TOKEN,
   ICON_EMOJI: ':rahul:'
 }
